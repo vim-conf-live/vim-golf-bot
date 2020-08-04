@@ -1,6 +1,6 @@
 use serenity::framework::standard::{macros::command, Args, CommandResult};
 use serenity::model::prelude::*;
-use serenity::prelude::*;
+use serenity::{prelude::*, utils::MessageBuilder};
 
 use log::info;
 
@@ -56,6 +56,8 @@ pub async fn participate(ctx: &Context, msg: &Message, mut args: Args) -> Comman
         );
         nvim.feedkeys(&keys_parsed, "ntx", true).await?;
 
+        let err = nvim.get_vvar("errmsg").await.unwrap();
+
         let out_lines = buf.get_lines(0, -1, false).await?;
         if chall.output.eq(&out_lines) {
             let score = keys_parsed.len();
@@ -69,14 +71,26 @@ pub async fn participate(ctx: &Context, msg: &Message, mut args: Args) -> Comman
             let file = File::create(Challenge::filename(&chall.id))?;
             ron::ser::to_writer(file, &chall)?;
         } else {
-            msg.reply(
-                ctx,
-                format!(
-                    "Invalid answer, your result is :\n```\n{}\n```",
-                    out_lines.join("\n")
-                ),
-            )
-            .await?;
+            let mut builder = MessageBuilder::new();
+            builder
+                .push_underline("Invalid answer")
+                .push(", your result is : ")
+                .push_line("```")
+                .push_line(out_lines.join("\n"))
+                .push_line("```");
+
+            if let Some(err) = err.as_str() {
+                if !err.is_empty() {
+                    builder
+                        .push_line("")
+                        .push_line("An error occurred when executing your input :")
+                        .push_line("```")
+                        .push_line(err)
+                        .push_line("```");
+                }
+            }
+
+            msg.reply(ctx, builder.build()).await?;
         }
     } else {
         msg.reply(

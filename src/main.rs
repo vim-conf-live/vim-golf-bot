@@ -16,18 +16,12 @@ mod commands;
 
 use log::error;
 use serenity::{
-    client::bridge::gateway::ShardManager,
     framework::{standard::macros::group, StandardFramework},
     prelude::*,
 };
-use std::{env, sync::Arc};
+use std::env;
 
 use commands::{manage::*, participate::*, reports::*};
-struct ShardManagerContainer;
-
-impl TypeMapKey for ShardManagerContainer {
-    type Value = Arc<Mutex<ShardManager>>;
-}
 
 struct Handler;
 
@@ -45,7 +39,7 @@ async fn main() {
     // `RUST_LOG` to debug`.
     env_logger::init();
 
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let token = env::args().next_back().expect("Expected a token in the environment");
 
     let mut client = Client::new(&token)
         .event_handler(Handler)

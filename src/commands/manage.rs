@@ -49,6 +49,26 @@ fn extract_content(content: &mut Lines) -> (String, Vec<String>, Vec<String>) {
 }
 
 #[command]
+#[description = r##"Registers a new challenge.
+
+The argument for this function is actually a text, describing the challenge.
+
+The format should be :
+
+```
+register
+
+# Challenge Title
+
+Input:
+[MARKDOWN CODE BLOCK CONTAINING THE INPUT]
+
+Output:
+[MARKDOWN CODE BLOCK CONTAINING THE INPUT]
+```
+
+The code block should by separated in triple backticks (as any markdown code block).
+"##]
 async fn register(ctx: &Context, msg: &Message) -> CommandResult {
     let (title, input_lines, output_lines) = extract_content(&mut msg.content.lines());
 
@@ -92,6 +112,8 @@ async fn register(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
+#[allowed_roles("Conference Admin", "VimGolf mod")]
+#[description = "Closes the provided challenge."]
 async fn close(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if let Ok(mut chall) = args.single::<Challenge>() {
         std::fs::remove_file(Challenge::filename(&chall.id))?;

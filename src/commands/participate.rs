@@ -29,6 +29,10 @@ pub async fn create_nvim_instance(
 }
 
 #[command]
+#[description = r##"Participate to a challenge.
+This command should be called with two arguments : a challenge ID and keys (as in map rhs)
+Both of the ID and the keys can be escaped within backticks.
+"##]
 pub async fn participate(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let chal_id = args.single::<Challenge>();
     let input = args.single::<String>();

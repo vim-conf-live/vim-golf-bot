@@ -39,10 +39,6 @@ struct General;
 
 #[tokio::main]
 async fn main() {
-    // This will load the environment variables located at `./.env`, relative to
-    // the CWD. See `./.env.example` for an example on how to structure this.
-    kankyo::load().expect("Failed to load .env file");
-
     // Initialize the logger to use environment variables.
     //
     // In this case, a good default is setting the environment variable

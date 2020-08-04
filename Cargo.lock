@@ -615,12 +615,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kankyo"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "147dec7a6c66256d1ca8704e3b34365ccb8e050baeca278f16a554cced9681df"
-
-[[package]]
 name = "kernel32-sys"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1498,7 +1492,6 @@ version = "0.2.0"
 dependencies = [
  "env_logger",
  "glob",
- "kankyo",
  "log",
  "nvim-rs",
  "ron",

@@ -18,7 +18,7 @@ pub async fn create_nvim_instance(
 
     let (nvim, _io_handle, _child) = create::new_child_cmd(
         Command::new(NVIMPATH)
-            .args(&["-u", "NONE", "--embed", "--headless"])
+            .args(&["-u", "NONE", "--embed", "--headless", "-Z"])
             .env("NVIM_LOG_FILE", "nvimlog"),
         handler,
     )
@@ -42,7 +42,10 @@ pub async fn participate(ctx: &Context, msg: &Message, mut args: Args) -> Comman
         let keys = keys.strip_suffix('`').unwrap_or(keys);
 
         let nvim = create_nvim_instance().await;
-        let buf = nvim.get_current_buf().await?;
+        let buf = nvim.create_buf(false, true).await?;
+        let win = nvim.get_current_win().await?;
+
+        win.set_buf(&buf).await?;
         let keys_parsed = nvim.replace_termcodes(keys, true, true, true).await?;
 
         buf.set_lines(0, -1, false, chall.input.to_vec()).await?;

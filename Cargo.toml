@@ -1,0 +1,23 @@
+[package]
+name = "vim-golf-bot"
+version = "0.2.0"
+authors = ["Thomas Vigouroux <tomvig38@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+nvim-rs = {git = "https://github.com/KillTheMule/nvim-rs.git", features = ["use_tokio"]}
+tokio = { version = "*", features= [ "full" ] }
+sha-1 = "0.9.1"
+glob = "0.3.0"
+serde = { version = "1.0", features = ["derive"] }
+ron = "0.6.0"
+env_logger = "0.6"
+kankyo = "0.2"
+log = "0.4"
+
+[dependencies.serenity]
+features = ["cache", "framework", "standard_framework", "rustls_backend"]
+git = "https://github.com/acdenisSK/serenity"
+branch = "await_next"

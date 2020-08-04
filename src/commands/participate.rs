@@ -18,7 +18,7 @@ pub async fn create_nvim_instance(
 
     let (nvim, _io_handle, _child) = create::new_child_cmd(
         Command::new(NVIMPATH)
-            .args(&["-u", "NONE", "--embed", "--headless", "-Z"])
+            .args(&["-u", "NONE", "--embed", "--headless", "-Z", "--noplugin"])
             .env("NVIM_LOG_FILE", "nvimlog"),
         handler,
     )
@@ -69,7 +69,6 @@ pub async fn participate(ctx: &Context, msg: &Message, mut args: Args) -> Comman
             let file = File::create(Challenge::filename(&chall.id))?;
             ron::ser::to_writer(file, &chall)?;
         } else {
-            println!("{:?}", out_lines);
             msg.reply(
                 ctx,
                 format!(

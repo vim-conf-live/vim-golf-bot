@@ -3,23 +3,50 @@ use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::str::Lines;
 
 use glob::glob;
 
-#[derive(Serialize, Deserialize)]
-pub struct Challenge {
-    pub id: String,
-    pub title: String,
-    timestamp: i64,
-    pub input: TextBlock,
-    pub output: TextBlock,
-    pub scores: Vec<Submission>,
+pub trait FromLines: Sized {
+    type Error;
+
+    fn from_lines(lines: &mut Lines) -> Result<Self, Self::Error>;
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct TextBlock {
     pub lang: Option<String>,
     pub content: Vec<String>,
+}
+
+impl FromLines for TextBlock {
+    type Error = String;
+    fn from_lines(lines: &mut Lines) -> Result<Self, Self::Error> {
+        let mut lang: Option<String> = None;
+        let mut content: Vec<String> = Vec::new();
+        let mut is_filling = false;
+
+        for line in lines {
+            if line.starts_with("```") {
+                if is_filling {
+                    return Ok(Self::new(lang, content));
+                } else {
+
+                    // Starting to read the block, we need to extract the lang too
+                    let line = line.strip_prefix("```").unwrap();
+                    if !line.is_empty() {
+                        lang = Some(line.to_owned());
+                    }
+
+                    is_filling = true;
+                }
+            } else if is_filling {
+                content.push(line.to_owned());
+            }
+        }
+
+        Err(String::from("Failed to parse TextBlock, reached EOF."))
+    }
 }
 
 impl TextBlock {
@@ -54,6 +81,16 @@ pub struct Submission {
     pub author: String,
     pub score: usize,
     pub keys: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Challenge {
+    pub id: String,
+    pub title: String,
+    timestamp: i64,
+    pub input: TextBlock,
+    pub output: TextBlock,
+    pub scores: Vec<Submission>,
 }
 
 impl Challenge {

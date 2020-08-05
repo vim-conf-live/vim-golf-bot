@@ -44,16 +44,9 @@ impl EventHandler for Handler {}
 #[commands(register, list, describe, participate, close, submissions)]
 struct General;
 
-// The framework provides two built-in help commands for you to use.
-// But you can also make your own customized help command that forwards
-// to the behaviour of either of them.
 #[help]
-// This replaces the information that a user can pass
-// a command-name as argument to gain specific information about it.
 #[individual_command_tip = "Hi !\n\
 If you want more information about a specific command, just pass the command as argument."]
-// Some arguments require a `{}` in order to replace it with contextual information.
-// In this case our `{}` refers to a command's name.
 async fn my_help(
     context: &Context,
     msg: &Message,
@@ -85,7 +78,7 @@ async fn main() {
 
     let http = Http::new_with_token(&token);
 
-    // We will fetch your bot's owners and id
+    // Let's fetch bot ID
     let bot_id = http
         .get_current_application_info()
         .await

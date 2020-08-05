@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use std::fs::File;
 use std::str::FromStr;
+use std::path::PathBuf;
 
 use glob::glob;
 
@@ -23,6 +24,7 @@ pub struct Submission {
 }
 
 impl Challenge {
+    pub const DIR: &'static str = "challenges";
     pub fn new(title: String, input: Vec<String>, output: Vec<String>, id: String, timestamp: i64) -> Self {
         Challenge {
             title,
@@ -46,12 +48,28 @@ impl Challenge {
         score
     }
 
-    pub fn filename(id: &str) -> String {
-        format!("challenges/{}.chal", id)
+    pub fn filename(id: &str) -> PathBuf {
+        let mut buf = PathBuf::new();
+        buf.push(Self::DIR);
+        buf.push(id);
+        buf.set_extension("chal");
+
+        buf
+    }
+
+    pub fn create_dir() -> std::io::Result<()> {
+        let mut buf = PathBuf::new();
+        buf.push(Self::DIR);
+
+        if std::fs::metadata(&buf).is_err() {
+            std::fs::create_dir(buf)?;
+        }
+
+        Ok(())
     }
 
     pub fn all() -> glob::Paths {
-        glob("challenges/*.chal").unwrap()
+        glob(&format!("{}/*.chal", Self::DIR)).unwrap()
     }
 
     pub fn last() -> Option<Self> {

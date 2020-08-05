@@ -31,6 +31,9 @@ use serenity::{
 use std::collections::HashSet;
 use std::env;
 
+mod challenge;
+use challenge::Challenge;
+
 use commands::{manage::*, participate::*, reports::*};
 
 struct Handler;
@@ -65,6 +68,11 @@ async fn my_help(
 
 #[tokio::main]
 async fn main() {
+
+    // Set up the challenges/ directory if needed
+    // TODO(vigoux): remove that unwrap
+    Challenge::create_dir().unwrap();
+
     // Initialize the logger to use environment variables.
     //
     // In this case, a good default is setting the environment variable

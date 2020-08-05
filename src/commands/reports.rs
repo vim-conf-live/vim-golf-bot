@@ -81,6 +81,7 @@ async fn describe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
 }
 
 #[command]
+#[aliases("leaderboard")]
 #[description = "Prints the submissions for the provided challenges."]
 async fn submissions(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 

@@ -7,13 +7,17 @@ use sha1::{Digest, Sha1};
 
 use std::fs::File;
 use std::str::Lines;
-use vim_golf_bot::challenge::Challenge;
+use vim_golf_bot::challenge::{Challenge, TextBlock};
 
-fn extract_content(content: &mut Lines) -> (String, Vec<String>, Vec<String>) {
+fn extract_content(content: &mut Lines) -> (String, TextBlock, TextBlock) {
+    let mut input_lang: Option<String> = None;
+    let mut output_lang: Option<String> = None;
+
     let mut input_lines: Vec<String> = Vec::new();
     let mut output_lines: Vec<String> = Vec::new();
 
-    let mut filling = &mut input_lines;
+    let mut filling_lang = &mut input_lang;
+    let mut filling_lines = &mut input_lines;
     let mut is_filling = false;
 
     content.next();
@@ -35,17 +39,28 @@ fn extract_content(content: &mut Lines) -> (String, Vec<String>, Vec<String>) {
             if is_filling {
                 // Finished reading the first block
                 is_filling = false;
-                filling = &mut output_lines;
+                filling_lang = &mut output_lang;
+                filling_lines = &mut output_lines;
             } else {
                 // Starting to read either of the two blocks
                 is_filling = true;
+
+                // Try to find the language
+                // We are sure because of the test we did before
+                let line = line.strip_prefix("```").unwrap();
+                if !line.is_empty() {
+                    *filling_lang = line.split_ascii_whitespace().next().map(|s| s.to_owned());
+                }
             }
         } else if is_filling {
-            filling.push(line.to_owned());
+            filling_lines.push(line.to_owned());
         }
     }
 
-    (first, input_lines, output_lines)
+    let input = TextBlock::new(input_lang, input_lines);
+    let output = TextBlock::new(output_lang, output_lines);
+
+    (first, input, output)
 }
 
 #[command]
@@ -94,7 +109,13 @@ async fn register(ctx: &Context, msg: &Message) -> CommandResult {
         chal_id.push_str(&format!("{:02x}", elem));
     }
 
-    let chall = Challenge::new(title, input_lines, output_lines, chal_id, msg.timestamp.timestamp());
+    let chall = Challenge::new(
+        title,
+        input_lines,
+        output_lines,
+        chal_id,
+        msg.timestamp.timestamp(),
+    );
 
     let file = File::create(Challenge::filename(&chall.id))?;
     ron::ser::to_writer(file, &chall)?;

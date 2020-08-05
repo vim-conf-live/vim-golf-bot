@@ -60,16 +60,12 @@ async fn describe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
         msg_builder.push_bold_line("Input:");
 
         msg_builder
-            .push_line("```")
-            .push_line(chall.input.join("\n"))
-            .push_line("```")
+            .push_line(chall.input.as_markdown())
             .push_line("");
 
         msg_builder.push_bold_line("Output :");
         msg_builder
-            .push_line("```")
-            .push_line(chall.output.join("\n"))
-            .push_line("```")
+            .push_line(chall.output.as_markdown())
             .push_line("");
 
         msg.channel_id.say(ctx, msg_builder.build()).await?;

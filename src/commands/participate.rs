@@ -55,7 +55,7 @@ pub async fn participate(ctx: &Context, msg: &Message, mut args: Args) -> Comman
             win.set_buf(&buf).await?;
             let keys_parsed = nvim.replace_termcodes(keys, true, true, true).await?;
 
-            buf.set_lines(0, -1, false, chall.input.to_vec()).await?;
+            buf.set_lines(0, -1, false, chall.input.content.to_vec()).await?;
 
             info!(
                 "Feeding : {}",
@@ -66,7 +66,7 @@ pub async fn participate(ctx: &Context, msg: &Message, mut args: Args) -> Comman
             let err = nvim.get_vvar("errmsg").await.unwrap();
 
             let out_lines = buf.get_lines(0, -1, false).await?;
-            if chall.output.eq(&out_lines) {
+            if chall.output.content.eq(&out_lines) {
                 let score = keys_parsed.len();
                 chall.add_submission(msg.author.name.to_string(), keys.to_owned(), score);
                 msg.reply(

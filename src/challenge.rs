@@ -1,19 +1,52 @@
 use serde::{Deserialize, Serialize};
 
 use std::fs::File;
-use std::str::FromStr;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use glob::glob;
 
 #[derive(Serialize, Deserialize)]
 pub struct Challenge {
-    pub title: String,
-    pub input: Vec<String>,
-    timestamp: i64,
     pub id: String,
-    pub output: Vec<String>,
+    pub title: String,
+    timestamp: i64,
+    pub input: TextBlock,
+    pub output: TextBlock,
     pub scores: Vec<Submission>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TextBlock {
+    pub lang: Option<String>,
+    pub content: Vec<String>,
+}
+
+impl TextBlock {
+    pub fn new(lang: Option<String>, content: Vec<String>) -> Self {
+        Self { lang, content }
+    }
+
+    pub fn as_markdown(&self) -> String {
+        let mut block;
+        if let Some(inner) = &self.lang {
+            block = format!("```{}\n", inner);
+        } else {
+            block = String::from("```\n");
+        }
+        block.push_str(&self.content.join("\n"));
+        block.push_str("\n```");
+
+        block
+    }
+
+    pub fn len(&self) -> usize {
+        self.content.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.content.is_empty()
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -25,7 +58,13 @@ pub struct Submission {
 
 impl Challenge {
     pub const DIR: &'static str = "challenges";
-    pub fn new(title: String, input: Vec<String>, output: Vec<String>, id: String, timestamp: i64) -> Self {
+    pub fn new(
+        title: String,
+        input: TextBlock,
+        output: TextBlock,
+        id: String,
+        timestamp: i64,
+    ) -> Self {
         Challenge {
             title,
             id,
@@ -73,14 +112,16 @@ impl Challenge {
     }
 
     pub fn last() -> Option<Self> {
-        Self::all().filter_map(|res| {
-            if let Ok(path) = res {
-                let fname = path.file_stem()?.to_str()?;
-                fname.parse::<Challenge>().ok()
-            } else {
-                None
-            }
-        }).max_by_key(|chall| chall.timestamp)
+        Self::all()
+            .filter_map(|res| {
+                if let Ok(path) = res {
+                    let fname = path.file_stem()?.to_str()?;
+                    fname.parse::<Challenge>().ok()
+                } else {
+                    None
+                }
+            })
+            .max_by_key(|chall| chall.timestamp)
     }
 }
 

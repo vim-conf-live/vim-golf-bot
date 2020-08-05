@@ -31,10 +31,8 @@ use serenity::{
 use std::collections::HashSet;
 use std::env;
 
-mod challenge;
-use challenge::Challenge;
-
 use commands::{manage::*, participate::*, reports::*};
+use vim_golf_bot::challenge::Challenge;
 
 struct Handler;
 

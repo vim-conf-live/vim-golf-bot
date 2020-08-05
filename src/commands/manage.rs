@@ -26,12 +26,12 @@ fn extract_content(content: &mut Lines) -> (String, Vec<String>, Vec<String>) {
     if let Some(end) = line.strip_prefix("# ") {
         first = String::from(end);
     } else {
-        is_filling = line == "```";
+        is_filling = line.starts_with("```");
         first = String::from("No title");
     }
 
     for line in content {
-        if line == "```" {
+        if line.starts_with("```") {
             if is_filling {
                 // Finished reading the first block
                 is_filling = false;

@@ -1,9 +1,7 @@
-use serenity::framework::standard::{macros::command, Args, CommandResult};
+use serenity::framework::standard::{macros::command, Args, CommandResult, ArgError};
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 use serenity::utils::MessageBuilder;
-
-use glob::glob;
 
 use std::fs::File;
 use vim_golf_bot::challenge::Challenge;
@@ -14,7 +12,7 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
     let mut answer = MessageBuilder::new();
     answer.push_line("The available challenges are :");
 
-    for file in glob("challenges/*.chal")? {
+    for file in Challenge::all() {
         match file {
             Ok(path) => {
                 if let Ok(file) = File::open(path) {
@@ -39,7 +37,14 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[description = "Describes the provided challenge."]
 async fn describe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    if let Ok(chall) = args.single::<Challenge>() {
+    let chall;
+    if args.len() >= 2 {
+        chall = args.single::<Challenge>();
+    } else {
+        chall = Challenge::last().ok_or(ArgError::from(String::from("No challenge to open.")));
+    }
+
+    if let Ok(chall) = chall {
         let mut msg_builder = MessageBuilder::new();
 
         msg_builder
@@ -78,30 +83,41 @@ async fn describe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
 #[command]
 #[description = "Prints the submissions for the provided challenges."]
 async fn submissions(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let mut builder = MessageBuilder::new();
 
-    for chal in args.iter::<Challenge>().filter_map(|c| c.ok()) {
-        if !chal.scores.is_empty() {
+    fn describe(chall: &Challenge, builder: &mut MessageBuilder) {
+        if !chall.scores.is_empty() {
             builder
                 .push("Submissions for ")
-                .push_mono(chal.id)
+                .push_mono(&chall.id)
                 .push_line(" :");
 
-            for sub in chal.scores {
+            for sub in &chall.scores {
                 builder
                     .push("* ")
-                    .push_bold(sub.author)
+                    .push_bold(&sub.author)
                     .push(" with : ")
-                    .push_mono(sub.keys)
+                    .push_mono(&sub.keys)
                     .push_line(format!(" ({} pts).", sub.score));
             }
         } else {
             builder
                 .push("No submissions for ")
-                .push_mono(chal.id)
+                .push_mono(&chall.id)
                 .push_line(".");
         }
-        builder.push_line("");
+    }
+
+    let mut builder = MessageBuilder::new();
+
+    if args.is_empty() {
+        if let Some(chall) = Challenge::last() {
+            describe(&chall, &mut builder);
+        }
+    } else {
+        for chall in args.iter::<Challenge>().filter_map(|c| c.ok()) {
+            describe(&chall, &mut builder);
+            builder.push_line("");
+        }
     }
 
     msg.channel_id.say(ctx, builder.build()).await?;

@@ -94,7 +94,7 @@ async fn register(ctx: &Context, msg: &Message) -> CommandResult {
         chal_id.push_str(&format!("{:02x}", elem));
     }
 
-    let chall = Challenge::new(title, input_lines, output_lines, chal_id);
+    let chall = Challenge::new(title, input_lines, output_lines, chal_id, msg.timestamp.timestamp());
 
     let file = File::create(Challenge::filename(&chall.id))?;
     ron::ser::to_writer(file, &chall)?;

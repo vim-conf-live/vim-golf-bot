@@ -3,10 +3,13 @@ use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::str::FromStr;
 
+use glob::glob;
+
 #[derive(Serialize, Deserialize)]
 pub struct Challenge {
     pub title: String,
     pub input: Vec<String>,
+    timestamp: i64,
     pub id: String,
     pub output: Vec<String>,
     pub scores: Vec<Submission>,
@@ -20,10 +23,11 @@ pub struct Submission {
 }
 
 impl Challenge {
-    pub fn new(title: String, input: Vec<String>, output: Vec<String>, id: String) -> Self {
+    pub fn new(title: String, input: Vec<String>, output: Vec<String>, id: String, timestamp: i64) -> Self {
         Challenge {
             title,
             id,
+            timestamp,
             input,
             output,
             scores: Vec::new(),
@@ -44,6 +48,21 @@ impl Challenge {
 
     pub fn filename(id: &str) -> String {
         format!("challenges/{}.chal", id)
+    }
+
+    pub fn all() -> glob::Paths {
+        glob("challenges/*.chal").unwrap()
+    }
+
+    pub fn last() -> Option<Self> {
+        Self::all().filter_map(|res| {
+            if let Ok(path) = res {
+                let fname = path.file_stem()?.to_str()?;
+                fname.parse::<Challenge>().ok()
+            } else {
+                None
+            }
+        }).max_by_key(|chall| chall.timestamp)
     }
 }
 

@@ -54,7 +54,11 @@ async fn describe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
 
         msg_builder
             .push_line("")
-            .push_line(chall.title)
+            .push_underline_line(chall.title)
+            .push_line("");
+
+        msg_builder
+            .push_line(chall.description)
             .push_line("");
 
         msg_builder.push_bold_line("Input:");

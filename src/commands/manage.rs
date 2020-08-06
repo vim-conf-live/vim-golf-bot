@@ -1,19 +1,19 @@
-use serenity::framework::standard::{macros::command, Args, CommandResult};
+use serenity::framework::standard::{macros::command, Args, CommandResult, CommandError};
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 use serenity::utils::MessageBuilder;
 
-use sha1::{Digest, Sha1};
 use log::info;
+use sha1::{Digest, Sha1};
 
 use std::fs::File;
 use std::str::Lines;
 use vim_golf_bot::challenge::{Challenge, FromLines, TextBlock};
 
-fn extract_content(lines: &mut Lines) -> Result<(String, TextBlock, TextBlock), String> {
+fn extract_content(lines: &mut Lines) -> Result<(String, String, TextBlock, TextBlock), String> {
     lines.next();
 
-    let mut content = lines.skip_while(|line| line.is_empty());
+    let mut content = lines.filter(|line| !line.is_empty());
 
     let line = content.next().ok_or(String::from("Challenge is empty"))?;
 
@@ -21,13 +21,15 @@ fn extract_content(lines: &mut Lines) -> Result<(String, TextBlock, TextBlock), 
     if let Some(end) = line.strip_prefix("# ") {
         first = String::from(end);
     } else {
-        first = String::from("No title");
+        return Err(String::from("Missing title"));
     }
 
-    let input = TextBlock::from_lines(lines)?;
-    let output = TextBlock::from_lines(lines)?;
+    let desc = String::from_lines(lines).map_err(|_| String::from("Missing description"))?;
 
-    Ok((first, input, output))
+    let input = TextBlock::from_lines(lines).map_err(|_| String::from("Missing input"))?;
+    let output = TextBlock::from_lines(lines).map_err(|_| String::from("Mising output"))?;
+
+    Ok((first, desc, input, output))
 }
 
 #[command]
@@ -42,6 +44,8 @@ register
 
 # Challenge Title
 
+## Short Description
+
 Input:
 [MARKDOWN CODE BLOCK CONTAINING THE INPUT]
 
@@ -53,7 +57,7 @@ The code block should by separated in triple backticks (as any markdown code blo
 "##]
 async fn register(ctx: &Context, msg: &Message) -> CommandResult {
     match extract_content(&mut msg.content.lines()) {
-        Ok((title, input_lines, output_lines)) => {
+        Ok((title, desc, input_lines, output_lines)) => {
             // Create unique challenge name
             let mut hasher = Sha1::new();
 
@@ -69,6 +73,7 @@ async fn register(ctx: &Context, msg: &Message) -> CommandResult {
 
             let chall = Challenge::new(
                 title,
+                desc,
                 input_lines,
                 output_lines,
                 chal_id,
@@ -86,17 +91,14 @@ async fn register(ctx: &Context, msg: &Message) -> CommandResult {
                 ),
             )
             .await?;
-        },
+            Ok(())
+        }
         Err(err) => {
-            msg.reply(
-                ctx,
-                "Invalid vim golf challenge : invalid challenge content.",
-            )
-            .await?;
-            info!("An error occured : {}", err);
+            msg.reply(ctx, format!("Invalid vim golf challenge : {}.", err))
+                .await?;
+            Err::<(), CommandError>(CommandError::from(err))
         }
     }
-    Ok(())
 }
 
 #[command]

@@ -13,6 +13,33 @@ pub trait FromLines: Sized {
     fn from_lines(lines: &mut Lines) -> Result<Self, Self::Error>;
 }
 
+impl FromLines for String {
+    type Error = String;
+
+    fn from_lines(lines: &mut Lines) -> Result<Self, Self::Error> {
+        let mut content = String::new();
+        let mut is_filling = false;
+
+        for line in lines {
+            if line.starts_with("```") {
+                return Err(String::from("``` lines are prohibited in paragraphs."))
+            } else if line.is_empty() {
+                if is_filling {
+                    // Finished to extract paragraph
+                    return Ok(content);
+                } else {
+                    is_filling = true;
+                }
+            } else if is_filling {
+                content.push_str(" ");
+                content.push_str(line);
+            }
+        }
+
+        Ok(content)
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct TextBlock {
     pub lang: Option<String>,
@@ -87,6 +114,7 @@ pub struct Submission {
 pub struct Challenge {
     pub id: String,
     pub title: String,
+    pub description: String,
     timestamp: i64,
     pub input: TextBlock,
     pub output: TextBlock,
@@ -97,6 +125,7 @@ impl Challenge {
     pub const DIR: &'static str = "challenges";
     pub fn new(
         title: String,
+        description: String,
         input: TextBlock,
         output: TextBlock,
         id: String,
@@ -104,6 +133,7 @@ impl Challenge {
     ) -> Self {
         Challenge {
             title,
+            description,
             id,
             timestamp,
             input,

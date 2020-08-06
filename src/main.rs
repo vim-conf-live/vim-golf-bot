@@ -59,7 +59,6 @@ async fn my_help(
 
 #[tokio::main]
 async fn main() {
-
     // Set up the challenges/ directory if needed
     // TODO(vigoux): remove that unwrap
     Challenge::create_dir().unwrap();
@@ -88,7 +87,8 @@ async fn main() {
         .framework(
             StandardFramework::new()
                 .configure(|c| c.prefix("?").on_mention(bot_id))
-                .after(handle_after)
+                .before(before)
+                .after(after)
                 .group(&GENERAL_GROUP)
                 .unrecognised_command(unknown_command)
                 .help(&MY_HELP),
@@ -102,7 +102,7 @@ async fn main() {
 }
 
 #[hook]
-async fn handle_after(_ctx: &Context, _msg: &Message, command_name: &str, error: CommandResult) {
+async fn after(_ctx: &Context, _msg: &Message, command_name: &str, error: CommandResult) {
     match error {
         Ok(()) => {
             info!("Executed {} succesfully.", command_name);
@@ -114,4 +114,26 @@ async fn handle_after(_ctx: &Context, _msg: &Message, command_name: &str, error:
 #[hook]
 async fn unknown_command(_ctx: &Context, _msg: &Message, unknown_command_name: &str) {
     info!("Unknown command : {}", unknown_command_name);
+}
+
+#[hook]
+async fn before(ctx: &Context, msg: &Message, command_name: &str) -> bool {
+    if let Some(name) = msg.channel_id.name(ctx).await {
+        if name != "vim-golf" && !name.starts_with("DM with") {
+            // Check wether it's a DM
+            msg.author
+                .dm(
+                    ctx,
+                    |m| m.content("Sorry, I only consider messages in the #vim-golf channel.")
+                )
+                .await.ok();
+            log::info!("Recieved {} on {}", command_name, name);
+            false
+        } else {
+            true
+        }
+    } else {
+        log::error!("Could not retrive channel name for : {}", command_name);
+        false
+    }
 }

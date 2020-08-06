@@ -3,7 +3,6 @@ use serenity::model::prelude::*;
 use serenity::prelude::*;
 use serenity::utils::MessageBuilder;
 
-use log::info;
 use sha1::{Digest, Sha1};
 
 use std::fs::File;

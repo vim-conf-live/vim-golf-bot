@@ -12,6 +12,10 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
     let mut answer = MessageBuilder::new();
     answer.push_line("The available challenges are :");
 
+    for pin in msg.channel_id.pins(ctx).await? {
+        msg.channel_id.unpin(ctx, pin).await?;
+    }
+
     for file in Challenge::all() {
         match file {
             Ok(path) => {
@@ -29,7 +33,8 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
         }
     }
 
-    msg.channel_id.say(ctx, answer).await?;
+    let out = msg.channel_id.say(ctx, answer).await?;
+    out.pin(ctx).await?;
 
     Ok(())
 }

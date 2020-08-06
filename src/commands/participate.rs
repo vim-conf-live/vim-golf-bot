@@ -78,11 +78,17 @@ pub async fn participate(ctx: &Context, msg: &Message, mut args: Args) -> Comman
                 let file = File::create(Challenge::filename(&chall.id))?;
                 ron::ser::to_writer(file, &chall)?;
             } else {
+                let lang = if let Some(lang) = &chall.output.lang {
+                    lang.to_string()
+                } else {
+                    String::new()
+                };
+
                 let mut builder = MessageBuilder::new();
                 builder
                     .push_underline("Invalid answer")
                     .push(", your result is : ")
-                    .push_line("```")
+                    .push("```").push_line(lang)
                     .push_line(out_lines.join("\n"))
                     .push_line("```");
 

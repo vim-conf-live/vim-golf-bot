@@ -90,16 +90,18 @@ async fn describe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
 #[description = "Prints the submissions for the provided challenges."]
 async fn submissions(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
-    fn describe(chall: &Challenge, builder: &mut MessageBuilder) {
+    fn describe(chall: &mut Challenge, builder: &mut MessageBuilder) {
+        chall.scores.sort_by_key(|c| c.score);
+
         if !chall.scores.is_empty() {
             builder
                 .push("Submissions for ")
                 .push_mono(&chall.id)
                 .push_line(" :");
 
-            for sub in &chall.scores {
+            for (index, sub) in chall.scores.iter().enumerate() {
                 builder
-                    .push("* ")
+                    .push(format!("{}. ", index + 1))
                     .push_bold(&sub.author)
                     .push(" with : ")
                     .push_mono(&sub.keys)
@@ -116,12 +118,12 @@ async fn submissions(ctx: &Context, msg: &Message, mut args: Args) -> CommandRes
     let mut builder = MessageBuilder::new();
 
     if args.is_empty() {
-        if let Some(chall) = Challenge::last() {
-            describe(&chall, &mut builder);
+        if let Some(mut chall) = Challenge::last() {
+            describe(&mut chall, &mut builder);
         }
     } else {
-        for chall in args.iter::<Challenge>().filter_map(|c| c.ok()) {
-            describe(&chall, &mut builder);
+        for mut chall in args.iter::<Challenge>().filter_map(|c| c.ok()) {
+            describe(&mut chall, &mut builder);
             builder.push_line("");
         }
     }

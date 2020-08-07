@@ -42,12 +42,11 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[description = "Describes the provided challenge."]
 async fn describe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let chall;
-    if args.len() >= 2 {
-        chall = args.single::<Challenge>();
+    let chall = if args.len() >= 1 {
+        args.single::<Challenge>()
     } else {
-        chall = Challenge::last().ok_or(ArgError::from(String::from("No challenge to open.")));
-    }
+        Challenge::last().ok_or(ArgError::from(String::from("No challenge to open.")))
+    };
 
     if let Ok(chall) = chall {
         let mut msg_builder = MessageBuilder::new();

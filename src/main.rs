@@ -39,7 +39,7 @@ struct Handler;
 impl EventHandler for Handler {}
 
 #[group]
-#[commands(register, list, describe, participate, close, submissions)]
+#[commands(register, list, describe, participate, close, submissions, refuse)]
 struct General;
 
 #[help]

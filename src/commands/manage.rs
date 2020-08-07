@@ -1,4 +1,4 @@
-use serenity::framework::standard::{macros::command, Args, CommandResult, CommandError};
+use serenity::framework::standard::{macros::command, ArgError, Args, CommandError, CommandResult};
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 use serenity::utils::MessageBuilder;
@@ -129,6 +129,33 @@ async fn close(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     } else {
         msg.reply(ctx, "Invalid command: invalid challenge id.")
             .await?;
+    }
+
+    Ok(())
+}
+
+#[command]
+#[allowed_roles("Conference Admin", "VimGolf mod")]
+#[description = "Removes an submission from a given challenge."]
+async fn refuse(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    let mut chall = if args.len() >= 2 {
+        args.single::<Challenge>()?
+    } else {
+        Challenge::last().ok_or(ArgError::from(String::from("No challenge to open.")))?
+    };
+
+    let index = args.single::<usize>()? - 1;
+
+    chall.scores.sort_by_key(|c| c.score);
+
+    if index < chall.scores.len() {
+        let sub = chall.scores.remove(index);
+        msg.reply(ctx, format!("Succesfully removed submission from {}.", sub.author)).await?;
+
+        let file = File::create(Challenge::filename(&chall.id))?;
+        ron::ser::to_writer(file, &chall)?;
+    } else {
+        msg.reply(ctx, "This submission does not exist.").await?;
     }
 
     Ok(())

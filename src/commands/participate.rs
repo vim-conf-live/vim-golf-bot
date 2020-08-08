@@ -32,7 +32,7 @@ async fn emulate(
     input: &Vec<String>,
     keys: &str,
 ) -> Result<(Vec<String>, usize, Option<String>), CommandError> {
-    let nvim = create_nvim_instance().await;
+    let mut nvim = create_nvim_instance().await;
     let buf = nvim.create_buf(false, true).await?;
     let win = nvim.get_current_win().await?;
 
@@ -50,6 +50,8 @@ async fn emulate(
     let err = nvim.get_vvar("errmsg").await.unwrap();
 
     let out_lines = buf.get_lines(0, -1, false).await?;
+
+    nvim.quit_no_save().await?;
 
     Ok((
         out_lines,

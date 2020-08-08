@@ -108,7 +108,15 @@ pub async fn participate(ctx: &Context, msg: &Message, mut args: Args) -> Comman
         )
         .await?;
 
-        if !is_try {
+        const DM_CHAN: &str = "DM with";
+
+        let channel_name: String = msg
+            .channel_id
+            .name(ctx)
+            .await
+            .unwrap_or(String::from(DM_CHAN));
+
+        if !(is_try || channel_name.starts_with(DM_CHAN)) {
             chall.add_submission(msg.author.name.to_string(), keys.to_owned(), score);
             let file = File::create(Challenge::filename(&chall.id))?;
             ron::ser::to_writer(file, &chall)?;

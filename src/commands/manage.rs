@@ -103,6 +103,8 @@ async fn register(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[allowed_roles("Conference Admin", "VimGolf mod")]
 #[description = "Closes the provided challenge."]
+#[usage = "{challenge id}"]
+#[num_args(1)]
 async fn close(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if let Ok(mut chall) = args.single::<Challenge>() {
         std::fs::remove_file(Challenge::filename(&chall.id))?;
@@ -137,6 +139,9 @@ async fn close(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 #[command]
 #[allowed_roles("Conference Admin", "VimGolf mod")]
 #[description = "Removes an submission from a given challenge."]
+#[usage = "[challenge id] {submission rank}"]
+#[min_args(1)]
+#[min_args(2)]
 async fn refuse(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let mut chall = if args.len() >= 2 {
         args.single::<Challenge>()?

@@ -8,6 +8,8 @@ use vim_golf_bot::challenge::Challenge;
 
 #[command]
 #[description = "Lists the open challenges."]
+#[usage = ""]
+#[num_args(0)]
 async fn list(ctx: &Context, msg: &Message) -> CommandResult {
     let mut answer = MessageBuilder::new();
     answer.push_line("The available challenges are :");
@@ -41,6 +43,9 @@ async fn list(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[command]
 #[description = "Describes the provided challenge."]
+#[usage = "[challenge id]"]
+#[min_args(0)]
+#[max_args(1)]
 async fn describe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let chall = if args.len() >= 1 {
         args.single::<Challenge>()
@@ -87,6 +92,9 @@ async fn describe(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
 #[command]
 #[aliases("leaderboard")]
 #[description = "Prints the submissions for the provided challenges."]
+#[usage = "[challenge id]"]
+#[min_args(0)]
+#[max_args(1)]
 async fn submissions(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
     fn describe(chall: &mut Challenge, builder: &mut MessageBuilder) {

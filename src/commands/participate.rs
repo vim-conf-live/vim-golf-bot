@@ -51,7 +51,7 @@ async fn emulate(
 
     let out_lines = buf.get_lines(0, -1, false).await?;
 
-    nvim.quit_no_save().await?;
+    let _ = nvim.quit_no_save().await;
 
     Ok((
         out_lines,
